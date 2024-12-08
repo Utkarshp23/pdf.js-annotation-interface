@@ -1164,6 +1164,15 @@ class AnnotationEditorUIManager {
     }
   }
 
+  addToAnnotationStorageExternal(editor){
+    if (
+      this.#annotationStorage &&
+      !this.#annotationStorage.has(editor.id)
+    ) {
+      this.#annotationStorage.setValue(editor.id, editor);
+    }
+  }
+
   #selectionChange() {
     const selection = document.getSelection();
     if (!selection || selection.isCollapsed) {

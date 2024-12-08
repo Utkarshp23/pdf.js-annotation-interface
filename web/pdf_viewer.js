@@ -374,6 +374,10 @@ class PDFViewer {
     }
   }
 
+  get annotationEditorUIManager() {
+    return this.#annotationEditorUIManager;
+  }
+
   get pagesCount() {
     return this._pages.length;
   }

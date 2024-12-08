@@ -508,8 +508,71 @@ class AnnotationEditorLayer {
     editor.fixAndSetPosition();
     editor.onceAdded();
     this.#uiManager.addToAnnotationStorage(editor);
+    this.updateMapInLocalStorage(editor.id,editor);
     editor._reportTelemetry(editor.telemetryInitialData);
   }
+
+  updateMapInLocalStorage(key, value) {
+    const localStorageKey = "pdfAnnotations";
+
+    // Step 1: Retrieve the Map from localStorage
+    let map = new Map();
+    const mapString = localStorage.getItem(localStorageKey);
+
+    if (mapString) {
+        // Step 2: If the Map exists, parse it
+        map = new Map(JSON.parse(mapString));
+    }
+
+    // Step 3: Add or update the key-value pair
+    map.set(key, value);
+
+    //const serializedMap = this.serializeMap(map);
+
+    // Step 4: Serialize and store the updated Map
+    localStorage.setItem(localStorageKey, JSON.stringify([...map]));
+    //localStorage.setItem(localStorageKey, JSON.stringify(serializedMap));
+  }
+
+  serializeMap = (map) => {
+    if (!(map instanceof Map)) {
+      console.error("The provided argument is not a Map:", map);
+      return null;
+    }
+  
+    const serializeValue = (value) => {
+      if (value && typeof value === "object") {
+        if (value instanceof Map) {
+          // Recursively serialize nested Maps
+          const serializedMap = {};
+          for (const [key, mapValue] of value.entries()) {
+            serializedMap[key] = serializeValue(mapValue);
+          }
+          return {
+            _class: "Map", // Capture the type
+            entries: serializedMap,
+          };
+        }
+  
+        const serializedObject = {
+          _class: value.constructor?.name, // Capture class name
+        };
+        for (const [key, propValue] of Object.entries(value)) {
+          serializedObject[key] = serializeValue(propValue); // Recursively serialize
+        }
+        return serializedObject;
+      }
+      return value; // For primitive types
+    };
+  
+    const serialized = {};
+    for (const [key, value] of map.entries()) {
+      serialized[key] = serializeValue(value);
+    }
+    return serialized;
+  };
+  
+
 
   moveEditorInDOM(editor) {
     if (!editor.isAttachedToDOM) {

@@ -135,11 +135,24 @@ class AnnotationStorage {
     return this.#storage.size > 0 ? objectFromMap(this.#storage) : null;
   }
 
+  getStorageMap(){
+    return this.#storage.size > 0 ? this.#storage : null;
+  }
+
   /**
    * @param {Object} obj
    */
   setAll(obj) {
     for (const [key, val] of Object.entries(obj)) {
+      this.setValue(key, val);
+    }
+  }
+
+  setStorageMap(map){
+    if (!(map instanceof Map)) {
+      throw new TypeError("Argument must be a Map");
+    }
+    for (const [key, val] of map.entries()) {
       this.setValue(key, val);
     }
   }

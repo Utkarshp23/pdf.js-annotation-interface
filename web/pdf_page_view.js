@@ -877,6 +877,18 @@ class PDFPageView {
     }
   }
 
+  getAnnotationsFromLocalStorage(){
+      const localStorageKey = "pdfAnnotations";
+
+      // Step 1: Retrieve the Map from localStorage
+      let map = new Map();
+      const mapString = localStorage.getItem(localStorageKey);
+      if (mapString) {
+        map = new Map(JSON.parse(mapString));
+      }
+      return map;
+  }
+
   async draw() {
     if (this.renderingState !== RenderingStates.INITIAL) {
       console.error("Must be in new state before drawing");
@@ -1079,6 +1091,16 @@ class PDFPageView {
         showCanvas?.(true);
         await this.#finishRenderTask(renderTask);
 
+        const { annotationEditorUIManager } = this.#layerProperties;
+
+        const annotationEditorMap = this.getAnnotationsFromLocalStorage();
+        for(const [editorId, editor] of annotationEditorMap){
+          console.log("retrivedEditor--->",editor);
+          annotationEditorUIManager.addToAnnotationStorageExternal(editor);
+        }
+
+        console.log(annotationEditorUIManager);
+
         this.structTreeLayer ||= new StructTreeLayerBuilder(
           pdfPage,
           viewport.rawDims
@@ -1090,8 +1112,8 @@ class PDFPageView {
           await this.#renderAnnotationLayer();
         }
 
-        const { annotationEditorUIManager } = this.#layerProperties;
-
+       
+        
         if (!annotationEditorUIManager) {
           return;
         }

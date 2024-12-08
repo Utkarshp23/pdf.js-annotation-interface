@@ -91,6 +91,12 @@ import { Preferences } from "web-preferences";
 import { SecondaryToolbar } from "web-secondary_toolbar";
 import { Toolbar } from "web-toolbar";
 import { ViewHistory } from "./view_history.js";
+import { InkEditor } from "../src/display/editor/ink.js";
+import { FreeTextEditor } from "../src/display/editor/freetext.js";
+import { HighlightEditor } from "../src/display/editor/highlight.js";
+import { AnnotationEditorLayer } from "../src/display/editor/annotation_editor_layer.js";
+import { AnnotationStorage } from "../src/display/annotation_storage.js";
+import { AnnotationEditor } from "../src/display/editor/editor.js";
 
 const FORCE_PAGES_LOADED_TIMEOUT = 10000; // ms
 
@@ -2222,6 +2228,263 @@ const PDFViewerApplication = {
     return this.pdfScriptingManager.ready;
   },
 };
+
+// const serializeMap = (obj) => {
+//   if (typeof obj !== 'object' || obj === null) {
+//     console.error("The provided argument is not an object:", obj);
+//     return null;
+//   }
+
+//   const serialized = {};
+//   for (const [key, value] of Object.entries(obj)) {
+//     serialized[key] = {
+//       _class: value.constructor.name, // Capture class name
+//       ...value, // Spread the properties
+//     };
+//   }
+//   return serialized;
+// };
+
+const serializeMap = (obj) => {
+  if (typeof obj !== 'object' || obj === null) {
+    console.error("The provided argument is not an object:", obj);
+    return null;
+  }
+
+  const serializeObject = (value) => {
+    if (value && typeof value === 'object') {
+      const serialized = {
+        _class: value.constructor?.name, // Capture class name
+      };
+
+      for (const [key, propValue] of Object.entries(value)) {
+        serialized[key] = serializeObject(propValue); // Recursively serialize
+      }
+      return serialized;
+    }
+    return value; // For primitive types
+  };
+
+  const serialized = {};
+  for (const [key, value] of Object.entries(obj)) {
+    serialized[key] = serializeObject(value);
+  }
+  return serialized;
+};
+
+
+const classRegistry = {
+  AnnotationEditor,
+  HighlightEditor,
+  FreeTextEditor,
+  InkEditor,
+  AnnotationEditorLayer
+  // Add other classes as needed
+};
+
+// const deserializeMap = (serialized) => {
+//   const map = {};
+//   for (const [key, value] of Object.entries(serialized)) {
+//     if (value._class && classRegistry[value._class]) {
+//       const ClassType = classRegistry[value._class];
+//       map[key] = Object.assign(new ClassType(), value);
+//       delete map[key]._class; // Remove the _class property after reconstruction
+//     } else {
+//       map[key] = value; // If no class match, store as plain object
+//     }
+//   }
+//   return map;
+// };
+
+// const deserializeMap = (serialized) => {
+//   const deserializeObject = (value) => {
+//     if (value && typeof value === 'object' && value._class) {
+//       const ClassType = classRegistry[value._class];
+//       if (ClassType) {
+//         const instance = new ClassType();
+//         for (const [key, propValue] of Object.entries(value)) {
+//           if (key !== '_class') {
+//             instance[key] = deserializeObject(propValue); // Recursively deserialize
+//           }
+//         }
+//         return instance;
+//       }
+//     }
+//     return value; // For primitive types or unregistered classes
+//   };
+
+//   const map = {};
+//   for (const [key, value] of Object.entries(serialized)) {
+//     map[key] = deserializeObject(value);
+//   }
+//   return map;
+// };
+
+const deserializeMap = (serialized) => {
+  if (typeof serialized !== "object" || serialized === null) {
+    console.error("The provided serialized data is not a valid object or is null:", serialized);
+    return null;
+  }
+
+  const deserializeObject = (value) => {
+    if (value && typeof value === "object" && value._class) {
+      if (value._class === "Map") {
+        // Recursively deserialize nested Maps
+        const nestedMap = new Map();
+        for (const [key, mapValue] of Object.entries(value.entries)) {
+          nestedMap.set(key, deserializeObject(mapValue));
+        }
+        return nestedMap;
+      }
+
+      console.log("--->",value._class);
+      const ClassType = classRegistry[value._class];
+      if (ClassType) {
+        const instance = new ClassType();
+        console.log("instance--->",instance)
+        for (const [key, propValue] of Object.entries(value)) {
+          if (key !== "_class") {
+            instance[key] = deserializeObject(propValue); // Recursively deserialize
+          }
+        }
+        return instance;
+      }
+    }
+    return value; // For primitive types or unregistered classes
+  };
+
+  const map = new Map();
+  for (const [key, value] of Object.entries(serialized)) {
+    map.set(key, deserializeObject(value));
+  }
+  return map;
+};
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  PDFViewerApplication.eventBus.on("documentloaded", async () => {
+    
+      //const localStorageKey = "pdfAnnotations";
+
+      // Step 1: Retrieve the Map from localStorage
+      //let map = new Map();
+      //const mapString = localStorage.getItem(localStorageKey);
+
+      //if (mapString) {
+          // Step 2: If the Map exists, parse it
+          //const parsedMap =JSON.parse(mapString);
+          //console.log(parsedMap);
+          //map = new Map(JSON.parse(mapString));
+          //const annotationEditorMap = deserializeMap(parsedMap);
+          //console.log("parsedMap--->",map);
+          // annotationEditorMap.forEach((editorId,editor)=>{
+          //   PDFViewerApplication.pdfViewer.annotationEditorUIManager.addToAnnotationStorage(editor);
+          // });
+          //for(const [editorId, editor] of map){
+            //console.log("retrivedEditor--->",editor);
+            //PDFViewerApplication.pdfViewer.annotationEditorUIManager.addToAnnotationStorageExternal(editor);
+          //}
+      //}
+      
+
+      //PDFViewerApplication.pdfViewer._pages.forEach(pageView => {
+        //console.log("pageView--->",pageView);
+        //pageView.renderAnnotationEditorLayer();
+        // if (pageView.annotationEditorLayerBuilder) {
+        //   console.log(`AnnotationEditorLayer for page ${pageView.id}:`, pageView.annotationEditorLayer);
+        //   // Example: Call render or update methods on the layer.
+        //   pageView.annotationEditorLayer.render();
+        // }
+      //});
+   });
+  
+
+  // PDFViewerApplication.eventBus.on("documentloaded", async () => { 
+  //   const pdfAnnotationStorage = PDFViewerApplication.pdfDocument.annotationStorage;
+  //   const storedAnnotations = localStorage.getItem('pdfAnnotations');
+
+  //   let retrievedMap = new Map(JSON.parse(storedAnnotations));
+
+  //   if (storedAnnotations) {
+  //     //const parsed = JSON.parse(storedAnnotations);
+  //     //const annotationMap = deserializeMap(parsed);
+  //     console.log("Reconstructed Annotations:", retrievedMap);
+
+  //     pdfAnnotationStorage.setStorageMap(retrievedMap);
+
+
+  //     //PDFViewerApplication.pdfViewer.setAnnotations(); 
+
+  //     //PDFViewerApplication.pdfDocument.annotationStorage = new AnnotationStorage();
+  //     //PDFViewerApplication.pdfDocument.annotationStorage.setAll(retrievedMap);
+  //     // PDFViewerApplication.pdfViewer.pdfDocument.getPageIndex
+  //      // Re-render annotations
+  //     // PDFViewerApplication.pdfViewer.pdfDocument.getPageIndex().forEach(index => {
+  //     //   const pageView = PDFViewerApplication.pdfViewer.getPageView(index);
+  //     //   if (pageView) {
+  //     //     pageView.render();
+  //     //   }
+  //     // });
+
+  //     // Re-render all pages
+  //     // const pdfViewer = PDFViewerApplication.pdfViewer;
+  //     // const numPages = pdfViewer.pagesCount;
+
+  //     // for (let i = 0; i < numPages; i++) {
+  //     //   const pageView = pdfViewer.getPageView(i);
+  //     //   if (pageView?.renderingState === 0) { // Only update if the page is in an idle state
+  //     //     pageView.update(); // Refresh annotations
+  //     //   } else {
+  //     //     console.log(`Page ${i + 1} is not ready for update.`);
+  //     //   }
+  //     // }
+
+
+  //     // const pdfViewer = PDFViewerApplication.pdfViewer;
+  //     // pdfViewer.update();
+
+  //     // Force the rendering of each page to include annotations
+  //     // for (let i = 0; i < PDFViewerApplication.pdfViewer._pages.length; i++) {
+  //     //   const pageView = PDFViewerApplication.pdfViewer._pages[i];
+  //     //   if (!pageView.pdfPage) {
+  //     //     await pageView.setPdfPage(await PDFViewerApplication.pdfDocument.getPage(i + 1));
+  //     //   }
+  //     //   await pageView.draw();
+  //     // }
+  //     console.log("Updated annotationStorage:", pdfAnnotationStorage.getAll());
+
+  //     // Refresh pages to apply annotations
+  //     await Promise.all(
+  //       PDFViewerApplication.pdfViewer._pages.map((pageView) =>
+  //         pageView.pdfPage ? pageView.update(pageView.pdfPage) : null
+  //       )
+  //     );
+  //   }
+    
+  //   console.log("done-->documentload",PDFViewerApplication.pdfDocument.annotationStorage);
+
+  // });
+
+  // window.addEventListener("beforeunload", () => { 
+  //   console.log("Inside page unload");
+  //   const pdfAnnotationStorage = PDFViewerApplication.pdfDocument.annotationStorage;
+  //   const annotationStorageMap = pdfAnnotationStorage.getStorageMap();
+  //   console.log("beforeunload-->",annotationStorageMap);
+  //   console.log(annotationStorageMap);
+  //   // Ensure the object is non-null before storing
+  //   if (annotationStorageMap !== null) {
+  //     //const serializedMap = serializeMap(annotationStorageMap);
+  //     //console.log("Serialized:",serializedMap);
+  //     //localStorage.setItem('pdfAnnotations', JSON.stringify(serializedMap));
+  //     localStorage.setItem('pdfAnnotations', JSON.stringify([...annotationStorageMap]));
+  //     console.log("Annotations stored successfully!");
+  //   } else {
+  //     console.log("No annotations to store.");
+  //   }
+
+  // });
+});
 
 initCom(PDFViewerApplication);
 
