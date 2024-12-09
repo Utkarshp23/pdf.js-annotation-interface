@@ -90,17 +90,17 @@ const DEFAULT_LAYER_PROPERTIES =
   typeof PDFJSDev === "undefined" || !PDFJSDev.test("COMPONENTS")
     ? null
     : {
-        annotationEditorUIManager: null,
-        annotationStorage: null,
-        downloadManager: null,
-        enableScripting: false,
-        fieldObjectsPromise: null,
-        findController: null,
-        hasJSActionsPromise: null,
-        get linkService() {
-          return new SimpleLinkService();
-        },
-      };
+      annotationEditorUIManager: null,
+      annotationStorage: null,
+      downloadManager: null,
+      enableScripting: false,
+      fieldObjectsPromise: null,
+      findController: null,
+      hasJSActionsPromise: null,
+      get linkService() {
+        return new SimpleLinkService();
+      },
+    };
 
 const LAYERS_ORDER = new Map([
   ["canvasWrapper", 0],
@@ -877,16 +877,16 @@ class PDFPageView {
     }
   }
 
-  getAnnotationsFromLocalStorage(){
-      const localStorageKey = "pdfAnnotations";
+  getAnnotationsFromLocalStorage() {
+    const localStorageKey = "pdfAnnotations";
 
-      // Step 1: Retrieve the Map from localStorage
-      let map = new Map();
-      const mapString = localStorage.getItem(localStorageKey);
-      if (mapString) {
-        map = new Map(JSON.parse(mapString));
-      }
-      return map;
+    // Step 1: Retrieve the Map from localStorage
+    let map = new Map();
+    const mapString = localStorage.getItem(localStorageKey);
+    if (mapString) {
+      map = new Map(JSON.parse(mapString));
+    }
+    return map;
   }
 
   async draw() {
@@ -1093,12 +1093,6 @@ class PDFPageView {
 
         const { annotationEditorUIManager } = this.#layerProperties;
 
-        const annotationEditorMap = this.getAnnotationsFromLocalStorage();
-        for(const [editorId, editor] of annotationEditorMap){
-          console.log("retrivedEditor--->",editor);
-          annotationEditorUIManager.addToAnnotationStorageExternal(editor);
-        }
-
         console.log(annotationEditorUIManager);
 
         this.structTreeLayer ||= new StructTreeLayerBuilder(
@@ -1112,8 +1106,6 @@ class PDFPageView {
           await this.#renderAnnotationLayer();
         }
 
-       
-        
         if (!annotationEditorUIManager) {
           return;
         }
@@ -1136,7 +1128,17 @@ class PDFPageView {
             this.#addLayer(annotationEditorLayerDiv, "annotationEditorLayer");
           },
         });
+
         this.#renderAnnotationEditorLayer();
+
+        // Inserted
+        const annotationEditorMap = this.getAnnotationsFromLocalStorage();
+        console.log("inside promise--->", this.annotationEditorLayer);
+        for (const [editorId, editor] of annotationEditorMap) {
+          console.log("retrivedEditor--->", editor);
+          //annotationEditorUIManager.addToAnnotationStorageExternal(editor);
+          this.annotationEditorLayer.annotationEditorLayer.createAndAddNewEditor({ x: 0, y: 0 }, false, editor);
+        }
       },
       error => {
         // When zooming with a `drawingDelay` set, avoid temporarily showing
@@ -1151,6 +1153,7 @@ class PDFPageView {
         return this.#finishRenderTask(renderTask, error);
       }
     );
+    console.log("outsidePromise--->", this.annotationEditorLayer)
 
     if (pdfPage.isPureXfa) {
       if (!this.xfaLayer) {
