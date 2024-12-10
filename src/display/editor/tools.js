@@ -1900,7 +1900,36 @@ class AnnotationEditorUIManager {
       !this.#deletedAnnotationsElementIds.has(editor.annotationElementId)
     ) {
       this.#annotationStorage?.remove(editor.id);
+      this.deleteAnnotationEditorFromLocalStorage(editor.id);
     }
+  }
+
+  deleteAnnotationEditorFromLocalStorage(key) {
+    const localStorageKey = "pdfAnnotations";
+  
+    // Step 1: Retrieve the Map from localStorage
+    let map = new Map();
+    const mapString = localStorage.getItem(localStorageKey);
+  
+    if (mapString) {
+      // Step 2: If the Map exists, parse it
+      map = new Map(JSON.parse(mapString));
+    }
+  
+    // Step 3: Delete the key-value pair from the map
+    if (map.has(key)) {
+      map.delete(key);
+      console.log(`Editor with key ${key} deleted.`);
+    } else {
+      console.warn(`No editor found with key ${key}.`);
+    }
+  
+    // Step 4: Serialize and update the map in localStorage
+    const serializedMap = JSON.stringify([...map.entries()], (key, val) =>
+      typeof val === "object" && val !== null && "toJSON" in val ? val.toJSON() : val
+    );
+    //console.log("Updated serialized map after deletion--->", serializedMap);
+    localStorage.setItem(localStorageKey, serializedMap);
   }
 
   /**

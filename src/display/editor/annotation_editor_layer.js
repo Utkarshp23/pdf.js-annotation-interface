@@ -736,13 +736,34 @@ class AnnotationEditorLayer {
     return editor;
   }
 
-  #createNewHighlightEditor(params) {
+  reAddHighlightEditor(editor){
+    if (editor.parent === this && editor.isAttachedToDOM) {
+      return;
+    }
+    this.changeParent(editor);
+    this.#uiManager.addEditor(editor);
+    this.attach(editor);
+
+    if (!editor.isAttachedToDOM) {
+      const div = editor.render();
+      this.div.append(div);
+      editor.isAttachedToDOM = true;
+    }
+
+    // The editor will be correctly moved into the DOM (see fixAndSetPosition).
+    editor.fixAndSetPosition();
+    editor.onceAdded();
+    editor._reportTelemetry(editor.telemetryInitialData);
+  }
+
+  #reNewHighlightEditor(params) {
     const editorType = AnnotationEditorLayer.#editorTypes.get(AnnotationEditorType.HIGHLIGHT);
     return editorType ? new editorType.prototype.constructor(params) : null;
   }
+  
   rerenderHighlightAnnotation(data, currentAnnotationEditorLayer) {
     const id = this.getNextId();
-    const editor = this.#createNewHighlightEditor({
+    const editor = this.#reNewHighlightEditor({
       ...data,
       parent: currentAnnotationEditorLayer,
       id,
@@ -751,6 +772,9 @@ class AnnotationEditorLayer {
       uiManager: this.#uiManager,
       isCentered: false
     });
+    if (editor) {
+      this.reAddHighlightEditor(editor);
+    }
   }
 
   #getCenterPoint() {
