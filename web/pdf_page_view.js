@@ -1137,7 +1137,8 @@ class PDFPageView {
         for (const [editorId, editor] of annotationEditorMap) {
           console.log("retrivedEditor--->", editor);
           //annotationEditorUIManager.addToAnnotationStorageExternal(editor);
-          this.annotationEditorLayer.annotationEditorLayer.createAndAddNewEditor({ x: 0, y: 0 }, false, editor);
+          this.annotationEditorLayer.annotationEditorLayer.viewport = editor.parent.viewport;
+          this.annotationEditorLayer.annotationEditorLayer.rerenderHighlightAnnotation(editor, this.annotationEditorLayer.annotationEditorLayer);
         }
       },
       error => {

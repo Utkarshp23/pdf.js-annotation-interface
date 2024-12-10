@@ -127,6 +127,33 @@ class HighlightEditor extends AnnotationEditor {
     }
   }
 
+  toJSON() {
+    return {
+      anchorNode: this.#anchorNode,
+      anchorOffeset: this.#anchorOffset,
+      boxes: this.#boxes,
+      focusNode: this.#focusNode,
+      focusOffset: this.#focusOffset,
+      id: this.#id,
+      methodOfCreation: this.#methodOfCreation,
+      parent: this.parent,
+      text: this.#text,
+      uiManager: this._uiManager,
+      x: this.x,
+      y: this.y,
+      clipPathId: this.#clipPathId,
+      thickness: this.#thickness,
+      outlineId: this.#outlineId,
+      opacity: this.#opacity,
+      lastPoint: this.#lastPoint,
+      isFreeHighlight: this.#isFreeHighlight,
+      highlightOutlines: this.#highlightOutlines,
+      highlightDiv: this.#highlightDiv,
+      focusOutlines: this.#focusOutlines,
+      colorPicker: this.#colorPicker
+    };
+  }
+
   /** @inheritdoc */
   get telemetryInitialData() {
     return {
@@ -283,7 +310,7 @@ class HighlightEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  translateInPage(x, y) {}
+  translateInPage(x, y) { }
 
   /** @inheritdoc */
   get toolbarPosition() {

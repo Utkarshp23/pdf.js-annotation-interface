@@ -508,7 +508,7 @@ class AnnotationEditorLayer {
     editor.fixAndSetPosition();
     editor.onceAdded();
     this.#uiManager.addToAnnotationStorage(editor);
-    this.updateMapInLocalStorage(editor.id,editor);
+    this.updateMapInLocalStorage(editor.id, editor);
     editor._reportTelemetry(editor.telemetryInitialData);
   }
 
@@ -520,17 +520,22 @@ class AnnotationEditorLayer {
     const mapString = localStorage.getItem(localStorageKey);
 
     if (mapString) {
-        // Step 2: If the Map exists, parse it
-        map = new Map(JSON.parse(mapString));
+      // Step 2: If the Map exists, parse it
+      map = new Map(JSON.parse(mapString));
     }
-
     // Step 3: Add or update the key-value pair
     map.set(key, value);
-
+    console.log("final map--->", map);
     //const serializedMap = this.serializeMap(map);
 
     // Step 4: Serialize and store the updated Map
-    localStorage.setItem(localStorageKey, JSON.stringify([...map]));
+    //const serializedMap = JSON.stringify([...map.entries()]);
+    // Serialize the map
+    const serializedMap = JSON.stringify([...map.entries()], (key, val) =>
+      typeof val === "object" && val !== null && "toJSON" in val ? val.toJSON() : val
+    );
+    console.log("final serialized map--->", serializedMap);
+    localStorage.setItem(localStorageKey, serializedMap);
     //localStorage.setItem(localStorageKey, JSON.stringify(serializedMap));
   }
 
@@ -539,7 +544,7 @@ class AnnotationEditorLayer {
       console.error("The provided argument is not a Map:", map);
       return null;
     }
-  
+
     const serializeValue = (value) => {
       if (value && typeof value === "object") {
         if (value instanceof Map) {
@@ -553,7 +558,7 @@ class AnnotationEditorLayer {
             entries: serializedMap,
           };
         }
-  
+
         const serializedObject = {
           _class: value.constructor?.name, // Capture class name
         };
@@ -564,14 +569,14 @@ class AnnotationEditorLayer {
       }
       return value; // For primitive types
     };
-  
+
     const serialized = {};
     for (const [key, value] of map.entries()) {
       serialized[key] = serializeValue(value);
     }
     return serialized;
   };
-  
+
 
 
   moveEditorInDOM(editor) {
@@ -729,6 +734,23 @@ class AnnotationEditorLayer {
     }
 
     return editor;
+  }
+
+  #createNewHighlightEditor(params) {
+    const editorType = AnnotationEditorLayer.#editorTypes.get(AnnotationEditorType.HIGHLIGHT);
+    return editorType ? new editorType.prototype.constructor(params) : null;
+  }
+  rerenderHighlightAnnotation(data, currentAnnotationEditorLayer) {
+    const id = this.getNextId();
+    const editor = this.#createNewHighlightEditor({
+      ...data,
+      parent: currentAnnotationEditorLayer,
+      id,
+      x: 0,
+      y: 0,
+      uiManager: this.#uiManager,
+      isCentered: false
+    });
   }
 
   #getCenterPoint() {
