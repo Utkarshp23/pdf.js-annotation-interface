@@ -508,8 +508,28 @@ class AnnotationEditorLayer {
     editor.fixAndSetPosition();
     editor.onceAdded();
     this.#uiManager.addToAnnotationStorage(editor);
-    this.updateMapInLocalStorage(editor.id, editor);
+    //this.updateMapInLocalStorage(editor.id, editor);
+    this.updateInStorageUsingInbuiltSerialization(editor.id, editor);
     editor._reportTelemetry(editor.telemetryInitialData);
+  }
+
+  updateInStorageUsingInbuiltSerialization(editorId,editor){
+
+    console.log("editor--->",editor);
+    const localStorageKey = "pdfAnnotations";
+    const serializedEditor = editor.serialize(false);
+    // Step 1: Retrieve the Map from localStorage
+    let map = new Map();
+    const mapString = localStorage.getItem(localStorageKey);
+
+    if (mapString) {
+      // Step 2: If the Map exists, parse it
+      map = new Map(JSON.parse(mapString));
+    }
+    map.set(editorId, serializedEditor);
+    console.log("final map--->", map);
+    const serializedMap = JSON.stringify([...map.entries()]);
+    localStorage.setItem(localStorageKey,serializedMap);
   }
 
   updateMapInLocalStorage(key, value) {
@@ -604,7 +624,6 @@ class AnnotationEditorLayer {
     }
     return serialized;
   };
-
 
 
   moveEditorInDOM(editor) {

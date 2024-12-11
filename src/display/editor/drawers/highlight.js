@@ -69,7 +69,7 @@ class HighlightOutliner {
     const shiftedMinX = minX - innerMargin;
     const shiftedMinY = minY - innerMargin;
     const lastEdge = this.#verticalEdges.at(isLTR ? -1 : -2);
-    const lastPoint = [lastEdge[0], lastEdge[2]];
+    const lastPoint = lastEdge? [lastEdge[0], lastEdge[2]] : 0;
 
     // Convert the coordinates of the edges into box coordinates.
     for (const edge of this.#verticalEdges) {

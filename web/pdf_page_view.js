@@ -51,6 +51,7 @@ import { TextAccessibilityManager } from "./text_accessibility.js";
 import { TextHighlighter } from "./text_highlighter.js";
 import { TextLayerBuilder } from "./text_layer_builder.js";
 import { XfaLayerBuilder } from "./xfa_layer_builder.js";
+import { HighlightEditor } from "../src/display/editor/highlight.js";
 
 /**
  * @typedef {Object} PDFPageViewOptions
@@ -1136,10 +1137,33 @@ class PDFPageView {
         console.log("inside promise--->", this.annotationEditorLayer);
         for (const [editorId, editor] of annotationEditorMap) {
           console.log("retrivedEditor--->", editor);
+          const deserializedEditor = await HighlightEditor.deserialize(editor,this.annotationEditorLayer.annotationEditorLayer,annotationEditorUIManager);
           //annotationEditorUIManager.addToAnnotationStorageExternal(editor);
-          this.annotationEditorLayer.annotationEditorLayer.viewport = editor.parent.viewport;
-          this.annotationEditorLayer.annotationEditorLayer.rerenderHighlightAnnotation(editor, this.annotationEditorLayer.annotationEditorLayer);
+          this.annotationEditorLayer.annotationEditorLayer.viewport = deserializedEditor.parent.viewport;
+          this.annotationEditorLayer.annotationEditorLayer.rerenderHighlightAnnotation(deserializedEditor, this.annotationEditorLayer.annotationEditorLayer);
         }
+        // const annotationEditorMap = this.getAnnotationsFromLocalStorage();
+        // console.log("inside promise--->", this.annotationEditorLayer);
+      
+        // for (const [editorId, editor] of annotationEditorMap) {
+        //   console.log("retrievedEditor--->", editor);
+      
+        //   // Wait for deserialization to complete
+        //   const deserializedEditor = await HighlightEditor.deserialize(
+        //     editor,
+        //     this.annotationEditorLayer.annotationEditorLayer,
+        //     annotationEditorUIManager
+        //   );
+      
+        //   // Use deserializedEditor for subsequent operations
+        //   this.annotationEditorLayer.annotationEditorLayer.viewport =
+        //     deserializedEditor.parent.viewport;
+      
+        //   this.annotationEditorLayer.annotationEditorLayer.rerenderHighlightAnnotation(
+        //     deserializedEditor,
+        //     this.annotationEditorLayer.annotationEditorLayer
+        //   );
+        // }
       },
       error => {
         // When zooming with a `drawingDelay` set, avoid temporarily showing
