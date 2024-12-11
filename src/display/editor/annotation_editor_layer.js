@@ -531,9 +531,37 @@ class AnnotationEditorLayer {
     // Step 4: Serialize and store the updated Map
     //const serializedMap = JSON.stringify([...map.entries()]);
     // Serialize the map
-    const serializedMap = JSON.stringify([...map.entries()], (key, val) =>
-      typeof val === "object" && val !== null && "toJSON" in val ? val.toJSON() : val
-    );
+    const serializedMap = JSON.stringify([...map.entries()], (key, val) => {
+      //typeof val === "object" && val !== null && "toJSON" in val ? val.toJSON() : val
+      if (val instanceof Node) {
+        return {
+          assignedSlot: val.assignedSlot,
+          baseURI: val.baseURI,
+          //childNodes: val.childNodes,
+          data: val.data,
+          firstChild: val.firstChild,
+          isConnected: val.isConnected,
+          lastChild: val.lastChild,
+          length: val.length,
+          nextElementSibling: val.nextElementSibling,
+          nextSibling: val.nextSibling,
+          nodeName: val.nodeName,
+          nodeType: val.nodeType,
+          nodeValue: val.nodeValue,
+          ownerDocument: val.document,
+          parentElement: val.parentElement,
+          parendNode: val.parentNode,
+          previousElementSibling: val.previousElementSibling,
+          previousSibling: val.previousSibling,
+          textContent: val.textContent,
+          wholeText: val.wholeText,
+        };
+      }
+      if (typeof val === "object" && val !== null && "toJSON" in val) {
+        return val.toJSON();
+      }
+      return val;
+    });
     console.log("final serialized map--->", serializedMap);
     localStorage.setItem(localStorageKey, serializedMap);
     //localStorage.setItem(localStorageKey, JSON.stringify(serializedMap));
@@ -736,7 +764,7 @@ class AnnotationEditorLayer {
     return editor;
   }
 
-  reAddHighlightEditor(editor){
+  reAddHighlightEditor(editor) {
     if (editor.parent === this && editor.isAttachedToDOM) {
       return;
     }
@@ -760,7 +788,7 @@ class AnnotationEditorLayer {
     const editorType = AnnotationEditorLayer.#editorTypes.get(AnnotationEditorType.HIGHLIGHT);
     return editorType ? new editorType.prototype.constructor(params) : null;
   }
-  
+
   rerenderHighlightAnnotation(data, currentAnnotationEditorLayer) {
     const id = this.getNextId();
     const editor = this.#reNewHighlightEditor({
